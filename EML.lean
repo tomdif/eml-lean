@@ -8,3 +8,4 @@ import EML.Variants
 import EML.MasterFormula
 import EML.Compile
 import EML.ExpLog
+import EML.Trees
