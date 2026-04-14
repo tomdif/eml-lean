@@ -9,3 +9,6 @@ import EML.MasterFormula
 import EML.Compile
 import EML.ExpLog
 import EML.Trees
+import EML.Algebra
+import EML.Calculus
+import EML.FixedPoints
