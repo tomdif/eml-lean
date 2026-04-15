@@ -6,7 +6,7 @@ A Lean 4 + Mathlib formalization of the results in:
 > *"All elementary functions from a single binary operator"*,
 > [arXiv:2603.21852](https://arxiv.org/abs/2603.21852) [cs.SC], April 2026.
 
-**All mathematical results in this repository are due to Odrzywołek.** This project is solely a machine-checked formalization of his work in the Lean 4 theorem prover. The discovery of the EML operator, the exhaustive search methodology, the completeness proof strategy, and all identities originate from the paper above.
+**All mathematical results from the paper are due to Odrzywołek.** This project is a machine-checked formalization of his work in the Lean 4 theorem prover, plus some original extensions (algebraic structure, calculus, and fixed-point analysis of the EML operator). The discovery of the EML operator, the exhaustive search methodology, the completeness proof strategy, and all identities originate from the paper above.
 
 ## The result
 
@@ -20,7 +20,7 @@ together with the constant **1**, generates the entire standard repertoire of a 
 
 ## What is formalized
 
-**11 Lean files. 140+ definitions and theorems. 0 sorry.**
+**14 Lean files. 160 definitions and theorems. 0 sorry.**
 
 ### Core identities (`Basic.lean`)
 - `exp(x) = eml(x, 1)`
@@ -80,6 +80,26 @@ The search script (`search.py`) is included for reproducibility.
 ### The suc/pre/inv identity (`SucPreInv.lean`)
 - `suc(inv(pre(inv(suc(inv(x)))))) = -x` — paper Section 2
 
+### Algebraic structure (`Algebra.lean`) — *original*
+Properties of eml as a binary operation, not discussed in the paper:
+- **Non-commutativity**: `eml(0, 1) = 1 ≠ e = eml(1, 0)`
+- **Non-associativity**: `eml(eml(0,1), 1) = e ≠ 0 = eml(0, eml(1,1))`
+- **No identity element**: no `e` exists such that `eml(e, x) = x` for all `x`, nor `eml(x, e) = x` for all `x`
+
+### Calculus of EML (`Calculus.lean`) — *original*
+Differential and monotonicity properties of eml:
+- **Partial derivatives**: `∂/∂x eml(x, y) = exp(x)` and `∂/∂y eml(x, y) = -1/y`
+- **Monotonicity**: strictly increasing in x, strictly decreasing in y (for y > 0)
+- **Injectivity**: injective in each argument (for y > 0 in the second)
+
+### Fixed points and zeros (`FixedPoints.lean`) — *original*
+Analysis of special values of eml:
+- **Zero set**: `eml(a, b) = 0 ↔ b = exp(exp(a))`
+- **Level sets**: `eml(a, b) = c ↔ b = exp(exp(a) - c)` for b > 0
+- **Fixed point equation**: `eml(x, x) = x ↔ exp(x) - x = log(x)`
+- **Fixed points satisfy x > 1** (proved via strict convexity of exp)
+- **Self-application**: `eml(x, eml(x, 1)) = exp(x) - x`
+
 ## What is not formalized
 
 - **Table 4 optimality**: proving a K value is *minimal* requires exhaustive enumeration of all smaller trees — a computation, not a deduction.
@@ -97,7 +117,7 @@ lake build
 
 ## Attribution
 
-The mathematical content formalized here is entirely the work of **Andrzej Odrzywołek**. Please cite his paper:
+The core mathematical content formalized here is the work of **Andrzej Odrzywołek**. The algebraic structure, calculus, and fixed-point sections are original extensions. Please cite his paper:
 
 ```
 @article{odrzywołek2026eml,
