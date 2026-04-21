@@ -7,6 +7,7 @@ import EML.SucPreInv
 import EML.Variants
 import EML.MasterFormula
 import EML.Compile
+import EML.ComplexCompile
 import EML.ExpLog
 import EML.Trees
 import EML.Algebra

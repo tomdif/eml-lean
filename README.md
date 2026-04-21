@@ -20,7 +20,7 @@ together with the constant **1**, generates the entire standard repertoire of a 
 
 ## What is formalized
 
-**14 Lean files. 160 definitions and theorems. 0 sorry.**
+**15 Lean files. 0 sorry.**
 
 ### Core identities (`Basic.lean`)
 - `exp(x) = eml(x, 1)`
@@ -58,10 +58,18 @@ The search script (`search.py`) is included for reproducibility.
 - Inductive types `EmlTree`, `EmlExpr`, `EmlExpr₂` formalizing the context-free grammar `S → 1 | x | eml(S, S)`
 - Verified tree evaluations matching Figure 2: exp (K=3), ln (K=7), identity (K=9), zero (K=7), e (K=3)
 
-### Compiler correctness (`Compile.lean`)
+### Compiler correctness (`Compile.lean`, `ComplexCompile.lean`)
 - An `ExpLogExpr` type for expressions built from `{1, x, exp, log}`
 - A `compile` function converting exp-log expressions to EML trees
-- **`compile_correct`**: the compiler preserves semantics for all exp-log expressions
+- **`compile_correct`** (`Compile.lean`): over ℝ, unconditional. Real-domain
+  evaluation uses `Real.log`, which satisfies `log(exp x) = x` for all `x : ℝ`
+  (since `exp x > 0`), so no branch hypothesis is needed.
+- **`compile_correctC`** (`ComplexCompile.lean`): over ℂ, conditioned on a
+  branch predicate `BranchOk x e` that asserts every `cLog` node's inner
+  exponent stays in the principal strip `(−π, π]`. The unconditional complex
+  version is *false*: at `x = −1` for `e = cLog .var`, compile gives `−πi`
+  while the actual value is `πi` — the `2πi` branch discrepancy is real and
+  intrinsic to the principal-log setup.
 
 ### Exp-log pair (`ExpLog.lean`)
 - Paper equation (1): `x × y = exp(ln x + ln y)` and `x + y = ln(exp x · exp y)`
