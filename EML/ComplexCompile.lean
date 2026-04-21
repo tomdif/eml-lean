@@ -103,26 +103,103 @@ hypotheses, not as a general multivalued equation). The narrative
 above is the counterexample; `compile_correctC` below is the
 statement that holds. -/
 
-/-! ## Convenience: derive BranchOk for safe expression classes
+/-! ## Corollary 1: expressions without cLog are unconditional
 
-In practice the per-node BranchOk hypothesis can be discharged for
-specific subsets of expressions. Two useful corollaries: (i) expressions
-evaluated at positive real inputs whose sub-expressions all stay positive
-real, and (ii) expressions whose sub-expression values stay off the
-negative real axis.
+For any `e : ExpLogExpr` containing no `cLog` nodes, `BranchOk` is
+trivially satisfied at every `x : ℂ`. No branch hypothesis is needed. -/
 
-These corollaries are not proved here; they are the natural next step if
-the repo wants polished real-to-complex bridge lemmas. -/
+/-- Predicate: the expression contains no `cLog` nodes. -/
+def NoCLog : ExpLogExpr → Prop
+  | .one => True
+  | .var => True
+  | .cExp e => NoCLog e
+  | .cLog _ => False
 
-/-- **Summary.**
+theorem branchOk_of_noCLog {x : ℂ} : ∀ {e : ExpLogExpr}, NoCLog e → BranchOk x e
+  | .one, _ => trivial
+  | .var, _ => trivial
+  | .cExp e, h => branchOk_of_noCLog (e := e) h
+  | .cLog _, h => (h : False).elim
 
-On the nose, `(compile e).evalC x = e.evalC x` does NOT hold for every
-`x : ℂ` (counterexample at `x = −1`). The correct theorem is
-`compile_correctC`: the identity holds whenever the branch predicate
-`BranchOk x e` holds at every `cLog` node along `e`.
+/-- **Unconditional on ℂ for cLog-free expressions.** -/
+theorem compile_correctC_noCLog {e : ExpLogExpr} (h : NoCLog e) (x : ℂ) :
+    (compile e).evalC x = e.evalC x :=
+  compile_correctC e x (branchOk_of_noCLog h)
 
-For real inputs, `compile_correct` in `Compile.lean` gives the
-unconditional statement over ℝ, with Mathlib's `Real.log = 0` convention
-on non-positives making the hypothesis-free statement technically true.
--/
+/-! ## Corollary 2: positive-real evaluation domain
+
+When `x : ℝ` is positive and every `cLog` node's sub-expression has a
+positive real evaluation, `BranchOk` is automatically satisfied and the
+complex identity follows. The branch exponent `exp 1 − log v` has
+imaginary part `0` when `v` is positive real, and `0 ∈ (−π, π]`. -/
+
+/-- Predicate: at a real input `x`, every `cLog` sub-expression has a
+    positive real evaluation. -/
+def SafeAtReal (x : ℝ) : ExpLogExpr → Prop
+  | .one => True
+  | .var => True
+  | .cExp e => SafeAtReal x e
+  | .cLog e => SafeAtReal x e ∧ 0 < e.eval x
+
+/-- Under `SafeAtReal`, the complex evaluation at `↑x` equals the real
+    evaluation coerced into ℂ. -/
+theorem evalC_eq_ofReal_eval (x : ℝ) :
+    ∀ (e : ExpLogExpr), SafeAtReal x e → e.evalC (↑x) = ((e.eval x : ℝ) : ℂ)
+  | .one, _ => by simp [ExpLogExpr.evalC, ExpLogExpr.eval]
+  | .var, _ => by simp [ExpLogExpr.evalC, ExpLogExpr.eval]
+  | .cExp e, h => by
+      simp only [ExpLogExpr.evalC, ExpLogExpr.eval]
+      rw [evalC_eq_ofReal_eval x e h, ← Complex.ofReal_exp]
+  | .cLog e, h => by
+      obtain ⟨h_sub, h_pos⟩ := h
+      simp only [ExpLogExpr.evalC, ExpLogExpr.eval]
+      rw [evalC_eq_ofReal_eval x e h_sub]
+      exact (Complex.ofReal_log h_pos.le).symm
+
+/-- When `v : ℝ` is positive, `Im(exp 1 − log (↑v)) = 0`. -/
+private theorem im_exp_one_sub_log_ofReal_eq_zero {v : ℝ} (hv : 0 < v) :
+    (Complex.exp 1 - Complex.log (↑v : ℂ)).im = 0 := by
+  have h_exp_one : Complex.exp 1 = ((Real.exp 1 : ℝ) : ℂ) := by
+    have : (1 : ℂ) = ((1 : ℝ) : ℂ) := by norm_cast
+    rw [this, ← Complex.ofReal_exp]
+  have h_log_real : (Complex.log (↑v : ℂ)).im = 0 := by
+    rw [← Complex.ofReal_log hv.le]
+    exact Complex.ofReal_im _
+  rw [Complex.sub_im, h_exp_one, Complex.ofReal_im, h_log_real]
+  ring
+
+/-- `BranchOk` is automatic under `SafeAtReal` at a real input. -/
+theorem branchOk_of_safeAtReal (x : ℝ) :
+    ∀ (e : ExpLogExpr), SafeAtReal x e → BranchOk (↑x) e
+  | .one, _ => trivial
+  | .var, _ => trivial
+  | .cExp e, h => branchOk_of_safeAtReal x e h
+  | .cLog e, h => by
+      obtain ⟨h_sub, h_pos⟩ := h
+      refine ⟨branchOk_of_safeAtReal x e h_sub, ?_, ?_⟩
+      · rw [evalC_eq_ofReal_eval x e h_sub]
+        rw [im_exp_one_sub_log_ofReal_eq_zero h_pos]
+        exact neg_lt_zero.mpr Real.pi_pos
+      · rw [evalC_eq_ofReal_eval x e h_sub]
+        rw [im_exp_one_sub_log_ofReal_eq_zero h_pos]
+        exact Real.pi_pos.le
+
+/-- **Unconditional on ℂ for SafeAtReal expressions at positive reals.** -/
+theorem compile_correctC_safeAtReal (x : ℝ) (e : ExpLogExpr) (h : SafeAtReal x e) :
+    (compile e).evalC (↑x) = e.evalC (↑x) :=
+  compile_correctC e (↑x) (branchOk_of_safeAtReal x e h)
+
+/-! ## Summary.
+
+`(compile e).evalC x = e.evalC x` is NOT unconditionally true over ℂ —
+counterexample at `x = −1` for `e = cLog .var`. Three usable forms:
+
+  1. `compile_correctC`: over ℂ, conditional on `BranchOk x e`.
+  2. `compile_correctC_noCLog`: unconditional on ℂ when `e` has no `cLog`.
+  3. `compile_correctC_safeAtReal`: unconditional at positive-real inputs
+     when every sub-expression of `e` evaluates positively (real domain).
+
+For real inputs and real evaluation, `Compile.lean`'s `compile_correct`
+remains unconditional (via Mathlib's `Real.log = 0` convention on
+non-positives). -/
 example : True := trivial
