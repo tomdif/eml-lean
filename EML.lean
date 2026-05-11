@@ -13,3 +13,4 @@ import EML.Trees
 import EML.Algebra
 import EML.Calculus
 import EML.FixedPoints
+import EML.Identities
