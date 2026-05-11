@@ -20,7 +20,7 @@ together with the constant **1**, generates the entire standard repertoire of a 
 
 ## What is formalized
 
-**15 Lean files. 0 sorry.**
+**24 Lean files. 0 sorry.**
 
 ### Core identities (`Basic.lean`)
 - `exp(x) = eml(x, 1)`
@@ -107,6 +107,76 @@ Analysis of special values of eml:
 - **Fixed point equation**: `eml(x, x) = x ↔ exp(x) - x = log(x)`
 - **Fixed points satisfy x > 1** (proved via strict convexity of exp)
 - **Self-application**: `eml(x, eml(x, 1)) = exp(x) - x`
+
+### Anti-diagonal F identities — *original*
+
+The "anti-diagonal" of EML is the function `F(x) := eml(x, x⁻¹) = exp(x) + log(x)`. The single combinatorial fact `log(k·x) − log(x) = log(k)` generates a wide family of identities relating `F` at dilated points to algebraic combinations of `exp`. Nine files explore the mechanism, its universal scope, its limits, and its connection to analytic number theory.
+
+#### `Identities.lean` — The main identity
+
+For `x ≠ 0`,
+```
+e^x = (F(3x) − F(x) − log 3) / (F(2x) − F(x) − log 2) − 1.
+```
+
+- `F_eq_eml_inv`: `F(x) = eml(x, x⁻¹)`, placing F as a specific EML expression.
+- `F_dilate_sub`: `F(k·x) − F(x) − log(k) = exp(k·x) − exp(x)` — the cancellation lemma underlying everything else.
+- `exp_eq_F_quotient`: the main identity, by reduction to `(a³ − a)/(a² − a) = a + 1` with `a = e^x`.
+
+#### `IdentitiesFamily.lean` — Family extensions
+
+- `exp_mul_eq_F_quotient`: infinite cyclotomic family, `e^{(m−1)x}` from `F` at `{x, m·x, (2m−1)·x}` for all real `m ≥ 2`.
+- `F_pow`, `F_pow_ratio_eq`: power-function anti-diagonal `F_a(x) := x^a + log(x)`. The ratio `(F_a(3x) − F_a(x) − log 3) / (F_a(2x) − F_a(x) − log 2) = (3^a − 1)/(2^a − 1)` is constant in `x` and encodes the exponent `a`.
+- `F_second_diff`: second-order finite difference `F(3x) − 2F(2x) + F(x) = e^x(e^x − 1)² + log(3/4)`.
+- `sinh_eq_F_diff`, `cosh_eq_F_sum`: hyperbolic functions from the parity reflection `F(x) ± F(−x)`.
+- `F_inv_sum`, `F_inv_diff`: inversion identities. `F(x) + F(1/x) = e^x + e^{1/x}` — log is odd under inversion and cancels in the sum.
+- `F_dilate_cocycle`: the dilation difference `c(k, x) = F(k·x) − F(x) − log(k)` is a 1-cocycle for the multiplicative-group action on ℝ.
+
+#### `IdentitiesZoo.lean` — Universal mechanism
+
+- `anti_diag_dilate_sub`: for **any** function `g`, the function `F_g(x) := g(x) + log(x)` satisfies `F_g(k·x) − F_g(x) − log(k) = g(k·x) − g(x)`. The choice of `g` is irrelevant; the cancellation rests purely on `log`.
+- Specializations: `F_sin`, `F_cos`, `F_sinh`, `F_cosh`, `F_id` (with `g = identity`).
+
+#### `LogLogBreaks.lean` — Negative result
+
+Replacing `log(x)` by `log(log(x))` breaks the cancellation. `F_loglog_breaks`: at `x = e`, `k = e`, the residual is `log 2 − 1`, which is negative since `log 2 < log e = 1`. This rules out iterated logs and singles out log at "depth 1" as uniquely positioned.
+
+#### `ComplexIdentities.lean` — Trig from F at imaginary argument
+
+Define `F_C(z) := exp(z) + log(z)` over ℂ. For `x > 0`:
+- `F_C_imag_re`: `Re(F_C(i·x)) = cos(x) + log(x)`.
+- `F_C_imag_im`: `Im(F_C(i·x)) = sin(x) + π/2`.
+- `cos_eq_F_C_re`, `sin_eq_F_C_im`: trig extraction from `F_C`.
+
+#### `MellinHaar.lean` — Differential structure / Haar bridge
+
+- `hasDerivAt_F`: `F'(x) = exp(x) + x⁻¹`. The `x⁻¹` summand is the density of the multiplicative Haar measure `dx/x` on `(ℝ⁺, ·)`; the `exp(x)` summand is the F-tangent that survives dilation differences.
+- `F_euler_eq`: `x · F'(x) − 1 = x · exp(x)` (Euler-operator form).
+- `hasDerivAt_F_deriv`: `F''(x) = exp(x) − 1/x²`.
+
+The differential characterization makes explicit why the `log(k)` constants pervade every identity in this section: they are line integrals of the multiplicative-Haar density `1/x` from `1` to `k`.
+
+#### `MultiVar.lean` — Multi-variable extension
+
+`F₂(x, y) := exp(x) + exp(y) + log(x) + log(y) = F(x) + F(y)`. Joint and independent dilations give analogous identities with `2·log(k)` and `log(a) + log(b)` respectively.
+
+#### `VonMangoldt.lean` — Number-theoretic structure
+
+The dilation cocycle `c(k) := log(k)`, restricted to natural-number dilations, decomposes via the von Mangoldt function `Λ`:
+- `cocycle_eq_logSum_vonMangoldt`: `c(n) = log(n) = ∑_{d ∣ n} Λ(d)` (the standard `log = Λ ∗ 1` Dirichlet identity).
+- `cocycle_at_prime_power`: `c(p^j) = j · log(p)` for prime `p`.
+- `F_dilate_sub_prime_power`, `F_dilate_sub_divisor_sum`: F-identities expressed in `Λ` form.
+
+The cocycle of the F-identity is the same `log = Λ ∗ 1` decomposition that drives the explicit formula in analytic number theory. The theorems here are structural — they identify the vocabulary, not the content.
+
+#### `Characterization.lean` — Converse universal mechanism
+
+The universal mechanism in `IdentitiesZoo` proves `F = g + α·log + const` is *sufficient* for the dilation cancellation. This file proves it is also *necessary*:
+- `pure_log_characterization`: if `h(k·x) − h(x) = α·log(k)` for all positive `x, k`, then `h(x) = α·log(x) + h(1)`. A three-line proof via `k := x⁻¹`.
+- `dilation_decomposition`: if `F(k·x) − F(x) − α·log(k) = g(k·x) − g(x)` for all positive `x, k`, then `F = g + α·log + (F(1) − g(1))`.
+- `F_unique_up_to_constant`: specialization — the canonical `F = exp + log` is uniquely characterized (up to additive constant) by its dilation-cancellation behavior.
+
+Combined with `F_dilate_sub` (existence direction), this gives a complete characterization of F by dilation differences.
 
 ## What is not formalized
 
