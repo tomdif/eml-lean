@@ -15,3 +15,8 @@ import EML.Calculus
 import EML.FixedPoints
 import EML.Identities
 import EML.IdentitiesFamily
+import EML.IdentitiesZoo
+import EML.LogLogBreaks
+import EML.ComplexIdentities
+import EML.MellinHaar
+import EML.MultiVar
