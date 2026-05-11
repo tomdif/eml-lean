@@ -157,4 +157,58 @@ theorem cosh_eq_F_sum (x : ℝ) : Real.cosh x = (F x + F (-x)) / 2 - log x := by
   rw [Real.cosh_eq]
   ring
 
+/-! ## Inversion-reflection identities (x ↔ x⁻¹) -/
+
+/-- **Inversion-sum identity.** For all `x ≠ 0`,
+
+      F(x) + F(x⁻¹) = exp(x) + exp(x⁻¹).
+
+    The log piece is *odd under inversion* (`log(1/x) = −log x`), so it
+    cancels entirely in the sum, leaving only the exp piece evaluated at
+    `x` and `1/x`. -/
+theorem F_inv_sum {x : ℝ} (_hx : x ≠ 0) :
+    F x + F x⁻¹ = exp x + exp x⁻¹ := by
+  simp only [F, Real.log_inv]
+  ring
+
+/-- **Inversion-difference identity.** For all `x`,
+
+      F(x) − F(x⁻¹) = exp(x) − exp(x⁻¹) + 2·log(x).
+
+    The log piece doubles under the inversion-difference. -/
+theorem F_inv_diff (x : ℝ) :
+    F x - F x⁻¹ = exp x - exp x⁻¹ + 2 * log x := by
+  simp only [F, Real.log_inv]
+  ring
+
+/-! ## Dilation cocycle composition -/
+
+/-- **Cocycle composition.** The "dilation difference" `c(k, x) = F(k·x) − F(x)`
+    satisfies the 1-cocycle relation: composing dilations adds the differences.
+
+      [F((a·b)·x) − F(x)] = [F(a·x) − F(x)] + [F(a·b·x) − F(a·x)]
+
+    Equivalently, the `log k` and `exp(k·x) − exp(x)` pieces both compose
+    correctly under successive dilations `x ↦ a·x ↦ ab·x`. -/
+theorem F_dilate_cocycle {x a b : ℝ} (hx : x ≠ 0) (ha : 0 < a) (hb : 0 < b) :
+    F (a * b * x) - F x - log (a * b) =
+      (F (a * x) - F x - log a) + (F (a * b * x) - F (a * x) - log b) := by
+  -- Both sides reduce to exp(abx) - exp(x) via F_dilate_sub.
+  have hab : F (a * b * x) - F x - log (a * b) = exp (a * b * x) - exp x := by
+    have : F ((a * b) * x) - F x - log (a * b) = exp ((a * b) * x) - exp x :=
+      F_dilate_sub hx (mul_pos ha hb)
+    simpa [mul_assoc] using this
+  have h_a : F (a * x) - F x - log a = exp (a * x) - exp x :=
+    F_dilate_sub hx ha
+  have h_b : F (a * b * x) - F (a * x) - log b = exp (a * b * x) - exp (a * x) := by
+    -- Recognize a*b*x = b * (a*x); F_dilate_sub at the point (a*x) with k = b.
+    have hax_ne : a * x ≠ 0 := mul_ne_zero ha.ne' hx
+    have := F_dilate_sub hax_ne hb
+    -- this : F (b * (a * x)) - F (a * x) - log b = exp (b * (a * x)) - exp (a * x)
+    have heq : b * (a * x) = a * b * x := by ring
+    rw [heq] at this
+    exact this
+  rw [hab, h_a, h_b]
+  ring
+
 end EML.Identities
