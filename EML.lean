@@ -27,3 +27,6 @@ import EML.TranslationCocycle
 import EML.CocycleMechanism
 import EML.ModularCocycle
 import EML.EtaCocycle
+import EML.SCocycle
+import EML.EichlerIntegral
+import EML.HeckeAction
