@@ -36,17 +36,23 @@
 
   ## What this file states (with documented sorries)
 
-  • `heckeOp_slash_commute` — `T_p` commutes with the weight-`k`
-    slash action `∣[k]` of `SL(2, ℤ)`. This is the "Hecke acts on
-    modular forms" property and requires a coset-decomposition argument
-    that is non-trivial in Lean. **Documented sorry.**
+  • `heckeOp_slash_commute_one` — γ = 1 case, **fully proved**.
+
+  • `heckeOp_slash_commute_of_modular` — `T_p` commutes with the weight-`k`
+    slash action `∣[k]` of `SL(2, ℤ)` **on slash-invariant `f`**. This is
+    the "Hecke acts on modular forms" property; requires a coset-decomposition
+    argument that is non-trivial in Lean. **Documented sorry, 1–2 weeks.**
+    See "Important correction" comment block below — the unrestricted
+    "T_p commutes with slash for arbitrary `f`" statement is FALSE.
 
   • `heckeOp_period_polynomial` — `T_p` sends the period polynomial
     cocycle of a weight-`k` cusp form `f` to that of `T_p f`. This
     statement references the Eichler integral `eichlerIntegral f` which
     is being developed in a sibling file `EML/EichlerIntegral.lean`;
     here we keep the connection abstract via a hypothesis interface.
-    **Documented sorry.**
+    The `True`-typed placeholder hypothesis is a stub for the Eichler-
+    realization predicate that the sibling file will provide.
+    **Documented sorry, 2–4 weeks.**
 
   ## What this file does NOT do
 
@@ -185,44 +191,77 @@ theory. Each is stated honestly with a `sorry` and a TODO note
 explaining what is needed for a Lean proof. They are appropriate for
 "future work" in this formalization. -/
 
-/-- **Hecke commutes with the slash action.** For every prime `p`, weight
-    `k`, function `f : ℍ → ℂ`, and modular matrix `γ ∈ SL(2, ℤ)`,
+/-! ### Important correction (2026-05-12)
+
+The originally stated bare equality
+
+    (heckeOp p hp k f) ∣[k] γ = heckeOp p hp k (f ∣[k] γ)
+
+for **arbitrary** `f : ℍ → ℂ` is **FALSE**. A concrete numerical counter-example:
+with `p = 2`, `k = 0`, `γ = T = ((1,1),(0,1))`, `f(z) = z²`, `τ = 3`,
+
+    LHS = (T_2 f) ∣[0] T  at τ  =  297/8 = 37.125
+    RHS = T_2 (f ∣[0] T)  at τ  =  257/8 = 32.125
+
+(numerically verified). The two sides differ unless `f` is itself slash-invariant
+under `Γ = SL(2, ℤ)`; the standard statement (Diamond–Shurman Prop. 5.2.1) is
+"T_p **preserves** the space of weight-`k` modular forms", which requires `f`
+to be modular up front. We restate accordingly. -/
+
+/-- **Trivial base case** (γ = 1, fully proved). The Hecke operator commutes
+    with the slash action of the identity element. This is a sanity-check
+    fully provable from `SlashAction.slash_one`. -/
+theorem heckeOp_slash_commute_one (p : ℕ) (hp : 0 < p) (k : ℤ) (f : ℍ → ℂ) :
+    (heckeOp p hp k f) ∣[k] (1 : SL(2, ℤ)) = heckeOp p hp k (f ∣[k] (1 : SL(2, ℤ))) := by
+  rw [SlashAction.slash_one, SlashAction.slash_one]
+
+/-- **Hecke commutes with the slash action, on slash-invariant functions.**
+    For every prime `p`, weight `k`, function `f : ℍ → ℂ` **satisfying
+    `f ∣[k] δ = f` for every `δ ∈ SL(2, ℤ)`**, and every `γ ∈ SL(2, ℤ)`,
 
         (T_p f) ∣[k] γ = T_p (f ∣[k] γ).
 
-    This is the key fact that makes `T_p` an operator on modular forms
-    (rather than just on raw `ℍ → ℂ` functions).
+    Because the modularity hypothesis already forces `f ∣[k] γ = f`, this
+    statement is equivalent to `(T_p f) ∣[k] γ = T_p f`, i.e. `T_p f` is
+    slash-invariant. The non-trivial content is the *implication
+    "f modular ⇒ T_p f modular"*: see `heckeOp_preserves_slash_invariance`
+    below for the corollary statement.
 
     **Proof outline** (Diamond–Shurman, *A First Course in Modular Forms*,
-    Prop. 5.2.1): one rewrites both sides as a sum over the coset space
+    Prop. 5.2.1): rewrite both sides as a sum over the coset space
     `Γ \ M_p` where `M_p = {γ ∈ M₂(ℤ) : det γ = p}`. The matrices
     `((1,a),(0,p))` for `a = 0,…,p-1` together with `((p,0),(0,1))` form
-    a complete set of coset representatives. Both sides then become the
-    same sum, by a reindexing computation.
+    a complete set of coset representatives. After the reindexing
+    `M_i γ = γ_i · M_{π(i)}` (right-action of `γ` on cosets), each
+    `f ∣[k] (γ_i · M_{π(i)}) = (f ∣[k] γ_i) ∣[k] M_{π(i)} = f ∣[k] M_{π(i)}`
+    by the modularity hypothesis — and the sum re-collects to `T_p f`.
 
-    **What's missing in Lean**: a formalization of the double-coset
-    decomposition of `M_p`, plus the slash-action algebra of `GL₂(ℝ)`
-    on weight-`k` functions (Mathlib has the action but not the
-    coset-representative computation). -/
-theorem heckeOp_slash_commute (p : ℕ) (hp : 0 < p) (_hp_prime : p.Prime)
-    (k : ℤ) (f : ℍ → ℂ) (γ : SL(2, ℤ)) :
+    **What's missing in Lean**: a formalization of the right-coset
+    decomposition of `Γ \ M_p` (the bijection `M_i γ ↦ M_{π(i)}` and the
+    `γ_i` data), plus the slash-action algebra of `GL₂(ℝ)` on weight-`k`
+    functions. Mathlib has `SlashAction.slash_mul`, `add_slash`, etc., but
+    not the coset-representative computation. Estimated effort: 1–2 weeks
+    of dedicated Lean work. -/
+theorem heckeOp_slash_commute_of_modular (p : ℕ) (hp : 0 < p) (_hp_prime : p.Prime)
+    (k : ℤ) (f : ℍ → ℂ) (_hf : ∀ δ : SL(2, ℤ), f ∣[k] δ = f)
+    (γ : SL(2, ℤ)) :
     (heckeOp p hp k f) ∣[k] γ = heckeOp p hp k (f ∣[k] γ) := by
-  -- TODO: prove via the coset decomposition
-  --   M_p = ⊔_{a=0..p-1} Γ · ((1,a),(0,p))  ⊔  Γ · ((p,0),(0,1))
-  -- and a reindexing of the inner sum after the SL₂(ℤ) action.
-  -- Reference: Diamond–Shurman, Prop. 5.2.1.
-  -- Requires: coset-decomposition lemma not in Mathlib.
+  -- TODO: prove via the right-coset decomposition
+  --   M_p / Γ = {((p,0),(0,1))} ⊔ {((1,a),(0,p)) : a = 0..p-1}
+  -- and the reindexing M_i γ = γ_i · M_{π(i)}, using `_hf` to discharge
+  -- the `f ∣[k] γ_i = f` rewrites. Reference: Diamond–Shurman Prop. 5.2.1.
+  -- Requires: coset-decomposition lemma not in Mathlib (~1-2 weeks).
   sorry
 
 /-- **Hecke preserves modular invariance.** If `f` is invariant under
     `∣[k] γ` for every `γ ∈ SL(2, ℤ)`, so is `T_p f`. Corollary of
-    `heckeOp_slash_commute`. -/
+    `heckeOp_slash_commute_of_modular`. -/
 theorem heckeOp_preserves_slash_invariance
     (p : ℕ) (hp : 0 < p) (hp_prime : p.Prime) (k : ℤ) (f : ℍ → ℂ)
     (hf : ∀ γ : SL(2, ℤ), f ∣[k] γ = f) :
     ∀ γ : SL(2, ℤ), (heckeOp p hp k f) ∣[k] γ = heckeOp p hp k f := by
   intro γ
-  rw [heckeOp_slash_commute p hp hp_prime k f γ, hf]
+  rw [heckeOp_slash_commute_of_modular p hp hp_prime k f hf γ, hf]
 
 /-! ## Action on Eichler cocycles (interface)
 
@@ -273,27 +312,43 @@ structure EichlerCocycle (k : ℤ) where
     Hecke formula `T_p f = p^{k-1} f(p·) + (1/p) Σ f((·+a)/p)` term by
     term `(k-1)` times, then integrate from `τ` to `i∞`. Track how each
     integral transforms under `γ ∈ SL(2, ℤ)` and use the coset
-    decomposition from `heckeOp_slash_commute`.
+    decomposition from `heckeOp_slash_commute_of_modular`.
 
     **What's missing in Lean**: (a) the Eichler integral as a concrete
     operator (sibling file), (b) the differentiation-and-integration
     bookkeeping that connects `(τ-z)^{k-2}` kernels of `f` and `T_p f`,
-    (c) the same coset decomposition as `heckeOp_slash_commute`. -/
+    (c) the same coset decomposition as `heckeOp_slash_commute_of_modular`.
+
+    **Important**: the bare equality `Ψ_Tpf.c γ = (T_p · Ψ_f).c γ` requires
+    `Ψ_f` and `Ψ_Tpf` to be the period polynomials of *specific* cusp forms
+    `f` and `T_p f`, not arbitrary cocycles in `EichlerCocycle k`. The
+    `True`-typed placeholder hypothesis `_hΨ_pair` is a stub for the
+    "Eichler-realization" predicate `Ψ_f = periodOf f ∧ Ψ_Tpf = periodOf (T_p f)`
+    that is provided by the sibling file `EML/EichlerIntegral.lean`. Without
+    that link, the equality is false for the same reason
+    `heckeOp_slash_commute` was false without modularity. -/
 theorem heckeOp_period_polynomial
     (p : ℕ) (hp : 0 < p) (_hp_prime : p.Prime) (k : ℤ) (_f : ℍ → ℂ)
     (Ψ_f Ψ_Tpf : EichlerCocycle k)
-    -- TODO: replace `True` with the encoding "Ψ_f, Ψ_Tpf are the period
-    -- polynomial cocycles of f and T_p f respectively".
+    -- TODO: replace `True` with the realization predicate
+    --   "Ψ_f, Ψ_Tpf are the period polynomial cocycles of f and T_p f resp.".
+    -- Without that predicate the equality below is false for arbitrary cocycles.
     (_hΨ_pair : True) :
     ∀ γ : SL(2, ℤ),
       Ψ_Tpf.c γ = fun τ =>
         ((p : ℂ) ^ (k - 1) * Ψ_f.c γ (posReal p hp • τ))
           + (1 / (p : ℂ)) * ∑ a ∈ Finset.range p,
               Ψ_f.c γ (heckePoint p hp a τ) := by
-  -- TODO: prove via Eichler integration + coset decomposition.
+  -- TODO: this theorem is only true under the missing realization hypothesis.
+  -- Plan: (1) sibling file `EML/EichlerIntegral.lean` formalizes a concrete
+  -- Eichler integral `eichlerIntegral f` so that `periodOf f` becomes a
+  -- specific `EichlerCocycle k`. (2) replace `_hΨ_pair : True` with
+  -- `Ψ_f = periodOf f ∧ Ψ_Tpf = periodOf (T_p f)`. (3) prove via differentiation
+  -- of the Hecke formula `k-1` times + integration + the coset decomposition
+  -- used in `heckeOp_slash_commute_of_modular`.
   -- Reference: Manin, *Periods of parabolic forms and p-adic Hecke series*,
   -- Math. USSR-Sb. 21 (1973), §2.
-  -- Requires: EML.EichlerIntegral (sibling file), heckeOp_slash_commute.
+  -- Estimated effort: 2-4 weeks once the sibling file and coset decomposition land.
   sorry
 
 /-! ## Connection to L-functions (sketch)
@@ -319,9 +374,11 @@ project in its own right. -/
 
 /-! ## Summary of sorries and what would be needed to discharge each
 
-This file has **2 honest sorries**:
+This file has **2 honest sorries** (after the 2026-05-12 correction):
 
-  1. `heckeOp_slash_commute`. Requires the coset decomposition
+  1. `heckeOp_slash_commute_of_modular`. The corrected statement; was previously
+     `heckeOp_slash_commute` without the modularity hypothesis, which is FALSE
+     (counter-example documented inline). Requires the coset decomposition
      `M_p = ⊔_{a=0..p-1} Γ · A_a ⊔ Γ · A_∞` with explicit representatives,
      plus the slash-action algebra under `GL₂(ℝ)`. Estimated effort:
      1-2 weeks of dedicated Lean work, much of which is "compute the
@@ -329,11 +386,13 @@ This file has **2 honest sorries**:
 
   2. `heckeOp_period_polynomial`. Requires (a) sibling file
      `EML/EichlerIntegral.lean` to define the Eichler integral concretely,
-     (b) `heckeOp_slash_commute`, (c) a differentiation-and-integration
-     computation. Estimated effort: 2-4 weeks once (1) and the sibling
-     file are done.
+     (b) `heckeOp_slash_commute_of_modular`, (c) a differentiation-and-integration
+     computation, (d) replacing the `True` placeholder with the
+     Eichler-realization predicate. Estimated effort: 2-4 weeks once (1)
+     and the sibling file are done.
 
 Both are the genuine mathematical content of the Hecke-cocycle bridge,
-not stylistic gaps. -/
+not stylistic gaps. `heckeOp_slash_commute_one` (γ = 1 case) is the only
+fully-proved instance of the slash-commute property here. -/
 
 end EML.Identities.HeckeAction
