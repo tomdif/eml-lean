@@ -119,9 +119,17 @@ Analysis of special values of eml:
 - **Fixed points satisfy x > 1** (proved via strict convexity of exp)
 - **Self-application**: `eml(x, eml(x, 1)) = exp(x) - x`
 
-### Anti-diagonal F identities — *original*, **NEW**
+### Anti-diagonal F identities, **NEW**
 
-The "anti-diagonal" of EML is the function `F(x) := eml(x, x⁻¹) = exp(x) + log(x)`. The single combinatorial fact `log(k·x) − log(x) = log(k)` generates a wide family of identities relating `F` at dilated points to algebraic combinations of `exp`. Seventeen files explore the mechanism, its universal scope, its limits, and its connection to analytic number theory.
+The "anti-diagonal" of EML is the function `F(x) := eml(x, x⁻¹) = exp(x) + log(x)`. The single combinatorial fact `log(k·x) − log(x) = log(k)` generates a wide family of identities relating `F` at dilated points to algebraic combinations of `exp`.
+
+**Attribution**: the core identity
+
+```
+e^x = (F(3x) − F(x) − log 3) / (F(2x) − F(x) − log 2) − 1
+```
+
+with `F(x) = exp(x) + log(x)` is **not original to this project** — it originates from an external source and was the entry point for the work in this section. What follows in the seventeen files below is a machine-checked formalization of that identity together with extensions and structural observations built on top of it: the universal mechanism (`IdentitiesZoo`), the negative result on iterated logs (`LogLogBreaks`), the differential / multiplicative-Haar reformulation (`MellinHaar`), the translation-group analog (`TranslationCocycle`), the general cocycle-cancellation framework (`CocycleMechanism`), the modular T- and S-cocycles (`ModularCocycle`, `SCocycle`), the von Mangoldt bridge (`VonMangoldt`), the F-rational grammar with the K=21 verification (`FRational`), and the algebraic skeletons for Eichler integrals and Hecke operators (`EichlerIntegral`, `HeckeAction`). Each file's header docstring credits the relevant classical reference where applicable.
 
 #### `Identities.lean` — The main identity *(NEW)*
 
@@ -267,7 +275,7 @@ lake build
 
 ## Attribution
 
-The core mathematical content formalized here is the work of **Andrzej Odrzywołek**. The algebraic structure, calculus, and fixed-point sections are original extensions. Please cite his paper:
+The core EML content formalized here is the work of **Andrzej Odrzywołek** (see paper citation below). The algebraic structure, calculus, and fixed-point sections are original extensions by this project. The anti-diagonal F identity (the entry-point formula `e^x = (F(3x) − F(x) − log 3)/(F(2x) − F(x) − log 2) − 1`) is **not original to this project** — it originates from an external source; the work in the anti-diagonal section is a Lean formalization and a set of extensions built on top of that identity. Please cite Odrzywołek's paper:
 
 ```
 @article{odrzywołek2026eml,
