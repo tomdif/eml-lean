@@ -211,4 +211,72 @@ theorem F_dilate_cocycle {x a b : ℝ} (hx : x ≠ 0) (ha : 0 < a) (hb : 0 < b) 
   rw [hab, h_a, h_b]
   ring
 
+/-! ## The negative anti-diagonal G = exp − log = eml(x, x)
+
+EML has *two* "anti-diagonals":
+  • `F(x) = exp(x) + log(x) = eml(x, x⁻¹)` (positive, the one used so far)
+  • `G(x) = exp(x) − log(x) = eml(x, x)` (negative; this is literally the
+    EML-diagonal evaluated at the same argument twice, already studied in
+    `FixedPoints.lean`).
+
+`G` carries the dilation cocycle with the opposite sign (`α = −1` instead of
+`α = +1`), giving a parallel mechanism: the same main identity, with a sign
+flip on the `log k` term. -/
+
+/-- The negative anti-diagonal of EML: `G(x) = exp(x) − log(x) = eml(x, x)`. -/
+noncomputable def G (x : ℝ) : ℝ := exp x - log x
+
+/-- `G` is exactly `eml` on the diagonal. -/
+theorem G_eq_eml_diag (x : ℝ) : G x = eml x x := by
+  simp [G, eml]
+
+/-- **Mirror cancellation lemma for `G`.** For `x ≠ 0` and `k > 0`,
+
+      G(k·x) − G(x) + log(k) = exp(k·x) − exp(x).
+
+  The sign on the `log(k)` term is **opposite** to `F_dilate_sub`'s (which
+  has `− log k`), reflecting that `G`'s log-component has sign `α = −1`. -/
+theorem G_dilate_sub {x k : ℝ} (hx : x ≠ 0) (hk : 0 < k) :
+    G (k * x) - G x + log k = exp (k * x) - exp x := by
+  simp only [G]
+  rw [Real.log_mul hk.ne' hx]
+  ring
+
+/-- **Mirror main identity** (for `x ≠ 0`):
+
+      exp(x) = (G(3x) − G(x) + log 3) / (G(2x) − G(x) + log 2) − 1.
+
+  Same shape as `exp_eq_F_quotient` but with `+ log k` instead of `− log k`. -/
+theorem exp_eq_G_quotient {x : ℝ} (hx : x ≠ 0) :
+    Real.exp x =
+      (G (3 * x) - G x + Real.log 3) / (G (2 * x) - G x + Real.log 2) - 1 := by
+  have h3 : G (3 * x) - G x + Real.log 3 = Real.exp (3 * x) - Real.exp x :=
+    G_dilate_sub hx (by norm_num : (0:ℝ) < 3)
+  have h2 : G (2 * x) - G x + Real.log 2 = Real.exp (2 * x) - Real.exp x :=
+    G_dilate_sub hx (by norm_num : (0:ℝ) < 2)
+  rw [h3, h2]
+  have e2 : Real.exp (2 * x) = Real.exp x * Real.exp x := by
+    rw [show (2 * x : ℝ) = x + x from by ring, Real.exp_add]
+  have e3 : Real.exp (3 * x) = Real.exp x * Real.exp x * Real.exp x := by
+    rw [show (3 * x : ℝ) = x + x + x from by ring, Real.exp_add, Real.exp_add]
+  rw [e2, e3]
+  have hp : (0 : ℝ) < Real.exp x := Real.exp_pos x
+  have hexp_ne : Real.exp x ≠ 1 := fun h =>
+    hx (Real.exp_injective (h.trans Real.exp_zero.symm))
+  have hne' : Real.exp x - 1 ≠ 0 := sub_ne_zero.mpr hexp_ne
+  have hden : Real.exp x * Real.exp x - Real.exp x ≠ 0 := by
+    have : Real.exp x * Real.exp x - Real.exp x = Real.exp x * (Real.exp x - 1) := by ring
+    rw [this]
+    exact mul_ne_zero hp.ne' hne'
+  field_simp
+  ring
+
+/-- **F + G = 2·exp**: the two anti-diagonals sum to twice the exponential. -/
+theorem F_add_G (x : ℝ) : F x + G x = 2 * Real.exp x := by
+  simp [F, G]; ring
+
+/-- **F − G = 2·log**: the two anti-diagonals differ by twice the logarithm. -/
+theorem F_sub_G (x : ℝ) : F x - G x = 2 * Real.log x := by
+  simp [F, G]; ring
+
 end EML.Identities
