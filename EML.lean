@@ -26,3 +26,4 @@ import EML.FRational
 import EML.TranslationCocycle
 import EML.CocycleMechanism
 import EML.ModularCocycle
+import EML.EtaCocycle
