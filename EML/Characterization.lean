@@ -73,6 +73,65 @@ theorem dilation_decomposition (F g : ℝ → ℝ) {α : ℝ}
             (h := fun z => F z - g z) hkey hx
   linarith
 
+/-- **Pure-linear characterization (translation analog).** If `h : ℝ → ℝ`
+    satisfies `h(x + a) − h(x) = α·a` for all `x, a : ℝ`, then
+    `h(x) = α·x + h(0)`.
+
+    Same trick as `pure_log_characterization`, in the translation group.
+    Specialize `a := −x`: `h(0) − h(x) = α·(−x) = −α·x`, so `h(x) = α·x + h(0)`.
+    No regularity required — the strong hypothesis (RHS specified explicitly
+    as `α·a`) makes Cauchy pathologies impossible. -/
+theorem pure_linear_characterization {h : ℝ → ℝ} {α : ℝ}
+    (hh : ∀ x a : ℝ, h (x + a) - h x = α * a) (x : ℝ) :
+    h x = α * x + h 0 := by
+  have key := hh x (-x)
+  simp at key
+  linarith
+
+/-! ## Abstract carrier-uniqueness theorem
+
+The dilation case (`pure_log_characterization`) and the translation case
+(`pure_linear_characterization`) are both instances of a single abstract
+theorem about cocycle carriers. Whenever a group action on `X` has a
+"witness" function reducing every point to a fixed reference, any carrier
+of a cocycle is determined explicitly by its value at the reference.
+
+This is the underlying meta-principle of the F-mechanism's uniqueness side.
+-/
+
+/-- **Carrier-uniqueness, abstract form.** Let `act : G → X → X` be an action,
+    `c : G → ℝ` a cocycle (specifying the carrier-difference at each `g`),
+    and `w : X → G` a witness that reduces every `x` to a reference `x₀`.
+    Then any carrier `f : X → ℝ` of `c` is determined by
+
+        f(x) = f(x₀) − c(w(x)).
+
+    No structure on `G`, `X`, `act` is required — the proof is one line
+    of algebra after the witness is applied. -/
+theorem cocycle_carrier_explicit
+    {G X : Type*} (act : G → X → X) (c : G → ℝ) (f : X → ℝ)
+    (hf : ∀ s x, f (act s x) - f x = c s)
+    (x₀ : X) (w : X → G) (h_wit : ∀ x, act (w x) x = x₀)
+    (x : X) :
+    f x = f x₀ - c (w x) := by
+  have h := hf (w x) x
+  rw [h_wit] at h
+  linarith
+
+/-- **Carrier-uniqueness (difference form).** Two carriers of the same
+    cocycle differ by a constant. -/
+theorem cocycle_carrier_diff_const
+    {G X : Type*} (act : G → X → X) {c : G → ℝ}
+    {f g : X → ℝ}
+    (hf : ∀ s x, f (act s x) - f x = c s)
+    (hg : ∀ s x, g (act s x) - g x = c s)
+    (x₀ : X) (w : X → G) (h_wit : ∀ x, act (w x) x = x₀)
+    (x : X) :
+    f x - g x = f x₀ - g x₀ := by
+  rw [cocycle_carrier_explicit act c f hf x₀ w h_wit x,
+      cocycle_carrier_explicit act c g hg x₀ w h_wit x]
+  ring
+
 /-- **F is unique up to additive constant.** The canonical anti-diagonal
     `F = exp + log` is the unique function (up to additive constant)
     satisfying `G(k·x) − G(x) − log(k) = exp(k·x) − exp(x)` for all positive
