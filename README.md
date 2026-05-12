@@ -22,6 +22,8 @@ together with the constant **1**, generates the entire standard repertoire of a 
 
 **32 Lean files. 0 sorry across 30 of them; 2 honest `sorry`s in `HeckeAction.lean` (with multi-line `-- TODO:` references to Diamond–Shurman §5.2.1 and Manin 1972).**
 
+> **2026-05-12 correction**: the originally stated `heckeOp_slash_commute` was false for arbitrary `f` (numerical counter-example: `p=2, k=0, γ=T, f(z)=z², τ=3` gives LHS=297/8 vs RHS=257/8). The corrected statement `heckeOp_slash_commute_of_modular` adds a modularity hypothesis — true, still `sorry` for the coset decomposition. The trivial γ = 1 case (`heckeOp_slash_commute_one`) is now fully proved. See `EML/HeckeAction.lean` "Important correction" block for details.
+
 ### 🆕 Recent additions (NEW)
 
 The 17 files marked **NEW** below are recent work, all on a single research arc: starting from the anti-diagonal identity `e^x = (F(3x) − F(x) − ln 3) / (F(2x) − F(x) − ln 2) − 1` with `F = exp + log`, building outward through universal cocycle mechanism, modular cocycles, an F-rational grammar, Eichler integrals, and Hecke operators. The arc bridges elementary function theory and analytic number theory, with all proofs machine-checked.
@@ -242,8 +244,11 @@ The natural higher-weight analog of additive cocycles. The cocycle becomes **pol
 
 The bridge from Eichler cocycles to L-functions of cusp forms. Mathlib has **no** Hecke-operator infrastructure (verified by searching all of Mathlib — only "Hecke's bound" on Fourier coefficients is present); this file establishes the framework.
 - `heckeOp p hp k f` — definition of `T_p` in weight `k`.
-- `heckeOp_add`, `heckeOp_smul`, `heckeOp_zero`: linearity. Proved.
-- `heckeOp_slash_commute`, `heckeOp_period_polynomial`: deep theorems. **Stated, with 2 honest `sorry`s** — multi-line `-- TODO:` blocks citing Diamond–Shurman §5.2.1 (coset decomposition: ~1-2 weeks of Lean work) and Manin 1972 (Eichler integration: ~2-4 weeks once the prerequisites land).
+- `heckeOp_add`, `heckeOp_smul`, `heckeOp_zero`: linearity. **Proved.**
+- `heckeOp_slash_commute_one`: γ = 1 specialization of the slash-commute property. **Proved** (one line, via `SlashAction.slash_one`).
+- `heckeOp_slash_commute_of_modular`: `T_p` commutes with `∣[k] γ` **on slash-invariant `f`**. The general statement (without modularity) is false — see the inline "Important correction" block for the explicit counter-example. **Stated, 1 honest `sorry`**, with multi-line `-- TODO:` citing Diamond–Shurman §5.2.1 (coset decomposition; ~1–2 weeks of Lean work).
+- `heckeOp_preserves_slash_invariance`: corollary that `T_p` preserves the space of slash-invariant functions. **Proved** (modulo `heckeOp_slash_commute_of_modular`).
+- `heckeOp_period_polynomial`: `T_p` action on Eichler cocycles. The bare statement holds only under the Eichler-realization predicate (currently encoded as a `True`-typed placeholder hypothesis — to be replaced once `EichlerIntegral.lean` provides a concrete realization). **Stated, 1 honest `sorry`**, citing Manin 1972 (~2–4 weeks once the prerequisites land).
 
 ## What is not formalized
 
