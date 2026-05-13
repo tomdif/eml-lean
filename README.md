@@ -129,7 +129,7 @@ The "anti-diagonal" of EML is the function `F(x) := eml(x, x⁻¹) = exp(x) + lo
 e^x = (F(3x) − F(x) − log 3) / (F(2x) − F(x) − log 2) − 1
 ```
 
-with `F(x) = exp(x) + log(x)` is **not original to this project** — it originates from an external source and was the entry point for the work in this section. What follows in the seventeen files below is a machine-checked formalization of that identity together with extensions and structural observations built on top of it: the universal mechanism (`IdentitiesZoo`), the negative result on iterated logs (`LogLogBreaks`), the differential / multiplicative-Haar reformulation (`MellinHaar`), the translation-group analog (`TranslationCocycle`), the general cocycle-cancellation framework (`CocycleMechanism`), the modular T- and S-cocycles (`ModularCocycle`, `SCocycle`), the von Mangoldt bridge (`VonMangoldt`), the F-rational grammar with the K=21 verification (`FRational`), and the algebraic skeletons for Eichler integrals and Hecke operators (`EichlerIntegral`, `HeckeAction`). Each file's header docstring credits the relevant classical reference where applicable.
+with `F(x) = exp(x) + log(x)` is **also due to Andrzej Odrzywołek** (the same author whose EML paper this repo formalizes — see [tweet announcement, May 2026]). The identity was the entry point for the work in this section, and is not originated by this project. What follows in the seventeen files below is a machine-checked formalization of Odrzywołek's identity together with extensions and structural observations built on top of it: the universal mechanism (`IdentitiesZoo`), the negative result on iterated logs (`LogLogBreaks`), the differential / multiplicative-Haar reformulation (`MellinHaar`), the translation-group analog (`TranslationCocycle`), the general cocycle-cancellation framework (`CocycleMechanism`), the modular T- and S-cocycles (`ModularCocycle`, `SCocycle`), the von Mangoldt bridge (`VonMangoldt`), the F-rational grammar with the K=21 verification (`FRational`), and the algebraic skeletons for Eichler integrals and Hecke operators (`EichlerIntegral`, `HeckeAction`). Each file's header docstring credits the relevant classical reference where applicable.
 
 #### `Identities.lean` — The main identity *(NEW)*
 
@@ -275,7 +275,7 @@ lake build
 
 ## Attribution
 
-The core EML content formalized here is the work of **Andrzej Odrzywołek** (see paper citation below). The algebraic structure, calculus, and fixed-point sections are original extensions by this project. The anti-diagonal F identity (the entry-point formula `e^x = (F(3x) − F(x) − log 3)/(F(2x) − F(x) − log 2) − 1`) is **not original to this project** — it originates from an external source; the work in the anti-diagonal section is a Lean formalization and a set of extensions built on top of that identity. Please cite Odrzywołek's paper:
+The EML operator and the anti-diagonal F identity (the entry-point formula `e^x = (F(3x) − F(x) − log 3)/(F(2x) − F(x) − log 2) − 1` with `F(x) = exp(x) + log(x)`) are both due to **Andrzej Odrzywołek** — the former from his EML paper, the latter from his subsequent tweet announcement (May 2026). The algebraic structure, calculus, and fixed-point sections are original extensions by this project. The work in the anti-diagonal section is a Lean formalization of Odrzywołek's identity together with a set of structural extensions built on top of it (universal mechanism, cocycle framework, modular cocycles, von Mangoldt bridge, etc.). Please cite Odrzywołek's paper:
 
 ```
 @article{odrzywołek2026eml,
